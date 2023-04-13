@@ -77,14 +77,14 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
         cprintf("+%d\n", ebp[1] - info.eip_fn_addr);
 
         // Print line number symbols
-        uint32_t* ptr = (uint32_t*)ebp[1]-1;
+        uint32_t* ptr = (uint32_t*) ebp[1] - 1;
         int offset = 0;
-        for(i=0;i<5;i++){
-            if(ptr>=info.eip_fn_addr){
-                cprintf("\t\t[%d]: %s:%d\n",offset,info.eip_file,info.eip_line);
-            }
+        while (ptr >= (uint32_t*) info.eip_fn_addr && offset < 5) {
+            struct Eipdebuginfo info2;
+            debuginfo_eip((uintptr_t) ptr + 1, &info2);
+            cprintf("\t\t[%d]: %s:%d\n", offset, info2.eip_file, info2.eip_line);
+            ptr = (uint32_t*) *ptr;
             offset++;
-            ptr = (uint32_t*)*ptr;
         }
 
         ebp = (uint32_t*) ebp[0]; // Move up the stack by setting ebp to the value at the current ebp address
@@ -92,7 +92,6 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 
     return 0;
 }
-
 
 
 
