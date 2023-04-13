@@ -26,7 +26,6 @@ static struct Command commands[] = {
     { "help", "Display this list of commands", mon_help },
     { "kerninfo", "Display information about the kernel", mon_kerninfo },
     { "backtrace", "Print backtrace of kernel stack", mon_backtrace },
-    { "debuginfo", "Display information about a given address in kernel", mon_debuginfo }
 };
 
 /***** Implementations of basic kernel monitor commands *****/
@@ -83,24 +82,6 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 
     return 0;
 }
-
-
-void
-mon_debuginfo(uintptr_t addr, struct Eipdebuginfo *info)
-{
-    if (debuginfo_eip(addr, info) == -1) {
-        cprintf("Error: Failed to get debug information for %x\n", addr);
-        return;
-    }
-
-    cprintf("Source file: %.*s:%d\n", info->eip_file_len, info->eip_file_name, info->eip_line);
-    cprintf("Function name: %.*s+%u\n", info->eip_fn_name_len, info->eip_fn_name, addr - info->eip_fn_addr);
-    cprintf("Arguments:\n");
-    for (int i = 0; i < info->eip_fn_narg; i++) {
-        cprintf("\t%08x: %08x\n", info->eip_fn_args[i], *((uint32_t *)(addr + 2 + 4 * i)));
-    }
-}
-
 
 
 /***** Kernel monitor command interpreter *****/
