@@ -31,6 +31,17 @@
 
 #include <inc/types.h>
 
+struct PushRegs {
+    uint32_t reg_edi;
+    uint32_t reg_esi;
+    uint32_t reg_ebp;
+    uint32_t reg_oesp;  // Useless padding
+    uint32_t reg_ebx;
+    uint32_t reg_edx;
+    uint32_t reg_ecx;
+    uint32_t reg_eax;
+} __attribute__((packed));
+
 struct Trapframe {
     struct PushRegs tf_regs;
     uint16_t tf_es;
