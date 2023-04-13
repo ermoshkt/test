@@ -42,19 +42,36 @@ mon_help(int argc, char **argv, struct Trapframe *tf)
 
 
 int
-mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
+mon_backtrace(int argc, char *argv, struct Trapframe tf)
 {
-	extern char _start[], entry[], etext[], edata[], end[];
+uint32_t ebp = (uint32_t) read_ebp(); // Get the base pointer (ebp)
+cprintf("Stack backtrace:\n");
 
-	cprintf("Special kernel symbols:\n");
-	cprintf("  _start                  %08x (phys)\n", _start);
-	cprintf("  entry  %08x (virt)  %08x (phys)\n", entry, entry - KERNBASE);
-	cprintf("  etext  %08x (virt)  %08x (phys)\n", etext, etext - KERNBASE);
-	cprintf("  edata  %08x (virt)  %08x (phys)\n", edata, edata - KERNBASE);
-	cprintf("  end    %08x (virt)  %08x (phys)\n", end, end - KERNBASE);
-	cprintf("Kernel executable memory footprint: %dKB\n",
-		ROUNDUP(end - entry, 1024) / 1024);
-	return 0;
+while (ebp) { // As long as ebp is not null
+    cprintf("  ebp %08x eip %08x args ", ebp, ebp[1]);
+    int i;
+    for (i = 2; i < 7; i++) { // Print the next 5 arguments on the stack
+        cprintf("%08x ", ebp[i]);
+    }
+    cprintf("\n");
+
+    struct Eipdebuginfo info;
+    debuginfo_eip(ebp[1], &info);
+    cprintf("\t%s:%d: ", info.eip_file, info.eip_line);
+    cprintf("%.*s", info.eip_fn_namelen, info.eip_fn_name);
+    cprintf("+%d", ebp[1] - info.eip_fn_addr);
+
+    // Print function arguments
+    int* args = (int*) (ebp + 2);
+    cprintf("\n");
+    for (i = 0; i < info.eip_fn_narg && i < 5; i++) {
+        cprintf("    arg %d: %08x\n", i, args[i]);
+    }
+
+    ebp = (uint32_t*) ebp[0]; // Move up the stack by setting ebp to the value at the current ebp address
+}
+
+return 0;
 }
 
 int
