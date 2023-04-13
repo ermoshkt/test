@@ -41,6 +41,8 @@ mon_help(int argc, char **argv, struct Trapframe *tf)
 	return 0;
 }
 
+void mon_debuginfo(uintptr_t addr, struct Eipdebuginfo *info);
+
 int
 mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 {
