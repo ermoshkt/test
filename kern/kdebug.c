@@ -167,29 +167,39 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
         rline = rfile;
     }
     // Ignore stuff after the colon.
-    info->eip_fn_namelen = strfind(info->eip_fn_name, ':') - info->eip_fn_name;
+	info->eip_fn_namelen = strfind(info->eip_fn_name, ':') - info->eip_fn_name;
 
-
-    	// Search within [lline, rline] for the line number stab.
+	// Search within [lline, rline] for the line number stab.
 	// If found, set info->eip_line to the correct line number.
 	// e.g., info->eip_line = stabs[lline].n_desc
 	// If not found, return -1.
 	//
 	// Hint:
-	//	There's a particular stabs type used for line numbers.
-	//	Look at the STABS documentation and <inc/stab.h> to find
-	//	which one.
+	// There's a particular stabs type used for line numbers.
+	// Look at the STABS documentation and <inc/stab.h> to find
+	// which one.
 	for (; lline <= rline; ++lline) {
-	    if (stabs[lline].n_type == N_SLINE) {
+		if (stabs[lline].n_type == N_SLINE) {
 		info->eip_line = stabs[lline].n_desc;
 		break;
-	    }
+		}
 	}
 	if (lline > rline) {
-	    return -1;
+	return -1;
 	}
+
+	// Search for the function argument count.
+	int argcount = 0;
+	int argidx = lfun;
+	for (; argidx <= rfun; ++argidx) {
+		if (stabs[argidx].n_type == N_PSYM) {
+		++argcount;
+		}
+	}
+	info->eip_fn_narg = argcount;
 
 	// If we get here, we successfully found the function and line number.
 	return 0;
 }
+   
 
