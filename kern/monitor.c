@@ -56,7 +56,7 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 	return 0;
 }
 
-void mon_backtrace(struct Trapframe *tf)
+int mon_backtrace(struct Trapframe *tf)
 {
     uint32_t ebp = read_ebp();
 
@@ -82,6 +82,7 @@ void mon_backtrace(struct Trapframe *tf)
 
         ebp = *((uint32_t *) ebp);
     }
+return 0;
 }
 
 
