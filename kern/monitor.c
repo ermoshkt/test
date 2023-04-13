@@ -41,7 +41,7 @@ mon_help(int argc, char **argv, struct Trapframe *tf)
 }
 
 
-static void
+int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
     uint32_t ebp, eip, args[5];
