@@ -58,33 +58,31 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 }
 
 int
-mon_debuginfo(int argc, char **argv, struct Trapframe *tf)
+mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
-    // Check if user provided an address argument
-    if (argc != 2) {
-        cprintf("Usage: debuginfo <address>\n");
-        return 0;
-    }
+    uint32_t* ebp = (uint32_t*) read_ebp(); // Get the base pointer (ebp)
+    cprintf("Stack backtrace:\n");
 
-    uintptr_t addr = strtol(argv[1], NULL, 0);
+    while (ebp) { // As long as ebp is not null
+        cprintf("  ebp %08x eip %08x args ", ebp, ebp[1]);
+        int i;
+        for (i = 2; i < 7; i++) { // Print the next 5 arguments on the stack
+            cprintf("%08x ", ebp[i]);
+        }
+        cprintf("\n");
 
-    // Fill the Eipdebuginfo struct with information about the given address
-    struct Eipdebuginfo info;
-    if (debuginfo_eip(addr, &info) < 0) {
-        cprintf("Error: could not get debug info for address 0x%08x\n", addr);
-        return 0;
-    }
+        struct Eipdebuginfo info;
+        debuginfo_eip(ebp[1], &info);
+        cprintf("\t%s:%d: ", info.eip_file, info.eip_line);
+        cprintf("%.*s", info.eip_fn_namelen, info.eip_fn_name);
+        cprintf("+%d\n", ebp[1] - info.eip_fn_addr);
 
-    // Print the debug info
-    cprintf("Function name: %.*s+%u\n", info.eip_fn_namelen, info.eip_fn_name, addr - info.eip_fn_addr);
-    cprintf("Source file: %.*s:%u\n", info.eip_file_namelen, info.eip_file_name, info.eip_line);
-    cprintf("Arguments: %u\n", info.eip_fn_narg);
-    for (int i = 0; i < info.eip_fn_narg; i++) {
-        cprintf("    arg %u: %08x\n", i, *((uint32_t *) (addr + (i+1)*4)));
+        ebp = (uint32_t*) ebp[0]; // Move up the stack by setting ebp to the value at the current ebp address
     }
 
     return 0;
 }
+
 
 
 
