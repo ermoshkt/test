@@ -57,9 +57,9 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 }
 
 int
-mon_backtrace(int argc, char *argv, struct Trapframetf)
+mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
-    uint32_t* ebp = (uint32_t) read_ebp(); // Get the base pointer (ebp)
+    uint32_t* ebp = (uint32_t*) read_ebp(); // Get the base pointer (ebp)
     cprintf("Stack backtrace:\n");
 
     while (ebp) { // As long as ebp is not null
@@ -73,7 +73,7 @@ mon_backtrace(int argc, char *argv, struct Trapframetf)
         struct Eipdebuginfo info;
         debuginfo_eip(ebp[1], &info);
         cprintf("\t%s:%d: ", info.eip_file, info.eip_line);
-        cprintf("%.s", info.eip_fn_namelen, info.eip_fn_name);
+        cprintf("%.*s", info.eip_fn_namelen, info.eip_fn_name);
         cprintf("+%d\n", ebp[1] - info.eip_fn_addr);
 
         ebp = (uint32_t*) ebp[0]; // Move up the stack by setting ebp to the value at the current ebp address
