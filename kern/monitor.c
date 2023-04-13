@@ -69,6 +69,7 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 
         ebp = *(uint32_t*) ebp; // Move up the stack by setting ebp to the value at the current ebp address
     }
+return 0;
 }
 
 
