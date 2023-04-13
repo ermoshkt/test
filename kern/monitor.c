@@ -59,20 +59,19 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
-    uint32_t ebp = read_ebp();
+    uint32_t ebp = read_ebp(); // The current ebp value
+    uint32_t eip = read_eip(); // The current eip value
+    struct Eipdebuginfo info;
+
     while (ebp != 0x0) {
-        uint32_t eip = *((uint32_t *) (ebp + 4));
-        struct Eipdebuginfo info;
-        if (debuginfo_eip(eip, &info) == 0) {
-            cprintf("%s:%d: ", info.eip_file, info.eip_line);
-            cprintf("%.*s+", info.eip_fn_namelen, info.eip_fn_name);
-            cprintf("%d\n", eip - info.eip_fn_addr);
-        } else {
-            cprintf("debuginfo_eip failed\n");
-        }
-        ebp = *((uint32_t *) ebp);
+        debuginfo_eip(eip, &info); // Get debug info for the current eip
+        cprintf("%s:%d: %.*s+%d\n", info.eip_file, info.eip_line, info.eip_fn_namelen,
+                info.eip_fn_name, eip - info.eip_fn_addr); // Print file name, line number, function name, and offset
+
+        ebp = *(uint32_t *) ebp; // Move up the stack by setting ebp to the value at the current ebp address
+        eip = *(uint32_t *) (ebp + 4); // Get the return address from the stack
     }
-return 0;
+    return 0;
 }
 
 
